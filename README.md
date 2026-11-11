@@ -29,8 +29,9 @@ Every number links back to its source and the rule used to rank it.
 
 - **Dashboard:** double-click `run_dashboard.bat`, or open `app.R` in RStudio and click **Run App**.
 - **Update data:** `Rscript update_data.R` from this folder, or the **Update data** button in the dashboard.
-  Run it daily so the week view builds up 7 days of history. On Windows, `update_data.bat` does this and
-  appends to `data/update.log`; schedule it with Task Scheduler.
+  Run it daily so the week view builds up 7 days of history. On Windows, `update_data.bat` does this,
+  appends to `data/update.log`, then commits and pushes the refreshed `data/` to GitHub (skipped if
+  nothing changed). Schedule it with Task Scheduler.
 
 R packages: `shiny`, `bslib`, `plotly`, `DT`, `httr`, `xml2`, `gtrendsR`.
 
