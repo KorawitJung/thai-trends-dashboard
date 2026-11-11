@@ -1,0 +1,7 @@
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+rsconnect/
+# local run log written by update_data.bat
+data/update.log
