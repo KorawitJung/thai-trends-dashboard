@@ -72,8 +72,7 @@ read_year_in_search <- function(year) {
   )
   out <- out[!duplicated(out[c("category", "rank")]), ]   # the page repeats cards for mobile
   # keep the page's own category order, ranks ascending within each list
-  out$page_order <- match(out$category, unique(out$category))
-  out <- out[order(out$page_order, out$rank), ]
+  out <- out[order(match(out$category, unique(out$category)), out$rank), ]
   rownames(out) <- NULL
   out
 }
@@ -113,8 +112,6 @@ top_from_rss <- function(rss_hist, days = 7, n = 10) {
     traffic      = max(d$traffic, na.rm = TRUE),
     traffic_text = d$traffic_text[which.max(d$traffic)],
     times_seen   = length(unique(d$fetched_at)),
-    first_seen   = min(d$fetched_at),
-    last_seen    = max(d$fetched_at),
     stringsAsFactors = FALSE)))
   agg <- agg[order(-agg$traffic, -agg$times_seen), ]
   agg$rank <- seq_len(nrow(agg))
@@ -124,12 +121,11 @@ top_from_rss <- function(rss_hist, days = 7, n = 10) {
 
 # ---- 3. Explore: interest over time ---------------------------------------------
 
-# Google Trends Explore time windows
+# Google Trends Explore time windows for the rolling views.
+# Year and 5-year views use calendar date ranges instead (see R/update.R).
 explore_windows <- c(
   day   = "now 1-d",      # past 24 hours, ~8-minute points
-  week  = "now 7-d",      # past 7 days, hourly points
-  year  = "today 12-m",   # past 12 months, weekly points
-  five  = "today+5-y"     # past 5 years, weekly/monthly points
+  week  = "now 7-d"       # past 7 days, hourly points
 )
 
 # Up to 5 terms per request: Google scales them together, so they are comparable
