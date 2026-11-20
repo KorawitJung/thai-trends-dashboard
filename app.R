@@ -65,6 +65,16 @@ trend_columns <- function(d, date_fmt) {
   )
 }
 
+# Tables render with escape = FALSE, so feed text is escaped here, quotes included,
+# and only http(s) links are kept; anything else shows as plain title text.
+news_link <- function(url, title) {
+  ok <- !is.na(url) & !is.na(title) & grepl("^https?://", url, ignore.case = TRUE)
+  ifelse(ok,
+         sprintf('<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+                 htmlEscape(url, attribute = TRUE), htmlEscape(title)),
+         ifelse(is.na(title), "", htmlEscape(title)))
+}
+
 no_data_msg <- "ยังไม่มีข้อมูลเส้นแนวโน้ม กด Update data หรือรัน update_data.R"
 # "ยังไม่มีข้อมูลเส้นแนวโน้ม กด Update data หรือรัน update_data.R"
 
@@ -259,10 +269,9 @@ server <- function(input, output, session) {
   output$day_table <- renderDT({
     l <- lists$day(); d <- with_trend(l, day_cache())
     d <- d[order(d$rank), ]
-    news <- ifelse(is.na(d$news_title), "",
-                   sprintf('<a href="%s" target="_blank">%s</a>', htmlEscape(d$news_url), htmlEscape(d$news_title)))
+    news <- news_link(d$news_url, d$news_title)
     out <- cbind(data.frame(`อันดับ` = d$rank, `คำค้นหา` = htmlEscape(d$term),
-                            `จำนวนการค้นหา` = d$traffic_text,
+                            `จำนวนการค้นหา` = htmlEscape(d$traffic_text),
                             `ลำดับในฟีด Google` = d$google_rank,   # ลำดับในฟีด Google
                             check.names = FALSE),
                  trend_columns(d, "%d/%m %H:%M"),
@@ -278,7 +287,7 @@ server <- function(input, output, session) {
     validate(need(!is.null(l), no_data_msg))
     d <- with_trend(l, week_cache()); d <- d[order(d$rank), ]
     out <- cbind(data.frame(`อันดับ` = d$rank, `คำค้นหา` = htmlEscape(d$term),
-                            `จำนวนการค้นหา (สูงสุด)` = d$traffic_text,
+                            `จำนวนการค้นหา (สูงสุด)` = htmlEscape(d$traffic_text),
                             `พบในการเก็บ (ครั้ง)` = d$times_seen, check.names = FALSE),
                  trend_columns(d, "%d/%m %H:%M"))
     datatable(out, rownames = FALSE, escape = FALSE, options = list(dom = "t", pageLength = 10, ordering = FALSE))
@@ -306,22 +315,23 @@ server <- function(input, output, session) {
   })
   output$year_source <- renderUI({
     y <- yis(); req(y, input$year_sel)
-    yy <- y[y$year == input$year_sel, ]
+    yr <- as.integer(input$year_sel); req(!is.na(yr))
+    yy <- y[y$year == yr, ]
     head_cat <- yis_headline_category(yy)
     note <- if (head_cat != top_searches_label)
-      sprintf(" · <b>ปี %s Google ไม่มีหมวด \"%s\" จึงใช้หมวด \"%s\" แทน</b>",
-              input$year_sel, top_searches_label, head_cat) else ""
+      sprintf(" · <b>ปี %d Google ไม่มีหมวด \"%s\" จึงใช้หมวด \"%s\" แทน</b>",
+              yr, top_searches_label, htmlEscape(head_cat)) else ""
       # ปี X Google ไม่มีหมวด "คำค้นหายอดนิยม" จึงใช้หมวด "..." แทน
     source_note(HTML(sprintf(
-      'รายการคำ: <a href="%s" target="_blank">Google Year in Search %s · Thailand</a> · อันดับตามที่ Google เผยแพร่ (คำที่คนค้นเพิ่มขึ้นมากที่สุดเทียบกับปีก่อน) · เส้นแนวโน้มแสดง 5 คำแรกของหมวด "%s"%s',
-      year_in_search_url(as.integer(input$year_sel)), input$year_sel, head_cat, note)))
+      'รายการคำ: <a href="%s" target="_blank">Google Year in Search %d · Thailand</a> · อันดับตามที่ Google เผยแพร่ (คำที่คนค้นเพิ่มขึ้นมากที่สุดเทียบกับปีก่อน) · เส้นแนวโน้มแสดง 5 คำแรกของหมวด "%s"%s',
+      year_in_search_url(yr), yr, htmlEscape(head_cat), note)))
     # รายการคำ: Google Year in Search ปี · Thailand · อันดับตามที่ Google เผยแพร่ (คำที่คนค้นเพิ่มขึ้นมากที่สุดเทียบกับปีก่อน) · เส้นแนวโน้มแสดง 5 คำแรกของหมวด "..."
   })
 
   output$five_table <- renderDT({
     l <- lists$five(); d <- with_trend(l, five_cache()); d <- d[order(d$year), ]
     out <- cbind(data.frame(`ปี` = d$year, `คำค้นหาอันดับ 1` = htmlEscape(d$term),
-                            `หมวด` = d$category, check.names = FALSE),
+                            `หมวด` = htmlEscape(d$category), check.names = FALSE),
                  trend_columns(d, "%m/%Y"))
     datatable(out, rownames = FALSE, escape = FALSE, options = list(dom = "t", ordering = FALSE))
   })

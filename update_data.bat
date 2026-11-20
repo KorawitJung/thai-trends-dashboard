@@ -23,6 +23,7 @@ if %errorlevel%==0 (
   goto :eof
 )
 %GIT% commit --quiet -m "data: daily update %date%" >> data\update.log 2>&1
-%GIT% pull --rebase --autostash --quiet >> data\update.log 2>&1
+REM No pull here: code fetched from GitHub would run unattended on the next trigger.
+REM If GitHub has newer commits the push is rejected; review them and pull by hand.
 %GIT% push --quiet >> data\update.log 2>&1
-if %errorlevel%==0 (echo git: pushed>> data\update.log) else (echo git: PUSH FAILED>> data\update.log)
+if %errorlevel%==0 (echo git: pushed>> data\update.log) else (echo git: PUSH FAILED, pull and review GitHub changes by hand>> data\update.log)
