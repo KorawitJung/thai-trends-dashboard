@@ -5,3 +5,4 @@
 rsconnect/
 # local run log written by update_data.bat
 data/update.log
+data/last_success.txt

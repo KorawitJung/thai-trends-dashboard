@@ -4,4 +4,6 @@
 
 source("R/sources.R")
 source("R/update.R")
-run_update()
+status <- run_update()
+# A non-zero exit tells update_data.bat the day's snapshot is missing, so the next trigger retries
+if (!isTRUE(status$rss)) quit(status = 1)
